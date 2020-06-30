@@ -1,5 +1,7 @@
 # iOS Universal Links
 
+[Support Universal Links(官网)](https://developer.apple.com/library/archive/documentation/General/Conceptual/AppSearch/UniversalLinks.html#//apple_ref/doc/uid/TP40016308-CH12-SW1)
+
 [iOS 接入微信](https://developers.weixin.qq.com/doc/oplatform/Mobile_App/Access_Guide/iOS.html)
 
 [Apple 检测apple-app-site-association文件是否正确(App Search API验证工具)](https://search.developer.apple.com/appsearch-validation-tool/)
