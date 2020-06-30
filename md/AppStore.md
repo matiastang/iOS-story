@@ -13,7 +13,7 @@
 $ grep -r UIWebView .
 ```
 查询没有发现使用了`UIWebView`，很早以前就使用`WKWebView`了，后面发现是微信的`SDK`版本比较低，于是更新了微信`SDK`就可以了。
-更新微信`SDK`(1.8.7.1)后，又有些内容更新，需要传入`universalLink`，[universalLink制作和使用]()。
+更新微信`SDK`(1.8.7.1)后，又有些内容更新，需要传入`universalLink`，[universalLink制作和使用](https://github.com/matiastang/iOS-story/blob/master/md/iOS_universalLink.md)。
 
 ## 被拒处理
 
