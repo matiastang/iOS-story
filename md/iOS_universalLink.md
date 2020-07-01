@@ -6,6 +6,26 @@
 
 [Apple 检测apple-app-site-association文件是否正确(App Search API验证工具)](https://search.developer.apple.com/appsearch-validation-tool/)
 
+[三方Universal Link集成](http://wiki.mob.com/moblink-universal-link-doc/)
+
+## Universal Link 介绍
+
+Universal Link是苹果在WWDC 2015上提出的iOS 9的新特性之一。此特性类似于深层链接，并能够方便地通过打开一个Https链接来直接启动您的客户端应用(手机有安装App)。对比起以往所使用的URL Sheme, 这种新特性在实现web-app的无缝链接时能够提供极佳的用户体验。
+
+这具体是一种怎样的情景呢？举个例子，你的用户在微信里面浏览一个你们公司的网页，而此时用户手机也同时安装有你们公司的App ；而universal link 能够使的用户在打开某个详情页时直接打开你的app 并到达app中相应内容的页面，从而实施用户想要的操作(例如查看某条新闻,例如查看某个商品的明细)
+
+以下分别为URL Scheme方式及Universal Link的方式呈现场景恢复的过程
+
+以下为URL Scheme方式: (第一张图是在微信中浏览web,下同)
+
+![ios scheme](./img/png/ios-scheme.png)
+
+以下为Universal Link方式:
+
+![ios universal link](./img/png/ios-UniversalLink.png)
+
+通过上述对比得知,Universal Link能够直接从微信中打开App,比起以往的URL Scheme的方式能够大大改善用户体验。
+
 更了了微信`SDK`后发现注册时需要添加`universalLink`(微信SDK1.8.6后的版本需要)。
 ```
 /*! @brief WXApi的成员函数，向微信终端程序注册第三方应用。
