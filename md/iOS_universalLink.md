@@ -24,11 +24,11 @@ Universal Link 是 Apple 从 iOS 9 引入的一种打通 web 和 app 之间跳�
 
 以下为URL Scheme方式: (第一张图是在微信中浏览web,下同)
 
-![ios scheme](./img/ios-scheme.png)
+![ios scheme](./img/iOSScheme.png)
 
 以下为Universal Link方式:
 
-![ios universal link](./img/ios-UniversalLink.png)
+![ios universal link](./img/iOSUniversalLink.png)
 
 通过上述对比得知,Universal Link能够直接从微信中打开App,比起以往的URL Scheme的方式能够大大改善用户体验。
 
