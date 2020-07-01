@@ -12,17 +12,23 @@
 
 Universal Link是苹果在WWDC 2015上提出的iOS 9的新特性之一。此特性类似于深层链接，并能够方便地通过打开一个Https链接来直接启动您的客户端应用(手机有安装App)。对比起以往所使用的URL Sheme, 这种新特性在实现web-app的无缝链接时能够提供极佳的用户体验。
 
+Universal Link 是 Apple 从 iOS 9 引入的一种打通 web 和 app 之间跳转的机制。在 Safari 或者 WebView 中打开与 app 关联的链接时，会自动跳转到 app 并且不丢失参数内容。Universal Link 解决了 URL Scheme 的部分问题：
+
+（1）当跳转失败时，会直接在 Safari/WebView 中打开链接；
+（2）可以借助 Universal Link 统一 web 端和 native 的路由；
+（3）跳转时不会弹出提示框，体验更好。
+
 这具体是一种怎样的情景呢？举个例子，你的用户在微信里面浏览一个你们公司的网页，而此时用户手机也同时安装有你们公司的App ；而universal link 能够使的用户在打开某个详情页时直接打开你的app 并到达app中相应内容的页面，从而实施用户想要的操作(例如查看某条新闻,例如查看某个商品的明细)
 
 以下分别为URL Scheme方式及Universal Link的方式呈现场景恢复的过程
 
 以下为URL Scheme方式: (第一张图是在微信中浏览web,下同)
 
-![ios scheme](./img/png/ios-scheme.png)
+![ios scheme](./img/ios-scheme.png)
 
 以下为Universal Link方式:
 
-![ios universal link](./img/png/ios-UniversalLink.png)
+![ios universal link](./img/ios-UniversalLink.png)
 
 通过上述对比得知,Universal Link能够直接从微信中打开App,比起以往的URL Scheme的方式能够大大改善用户体验。
 
