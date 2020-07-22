@@ -418,4 +418,3 @@ extension UIResponder : UIUserActivityRestoring {
 extension UIResponder : UIPasteConfigurationSupporting {
 }
 ```
-[UIResponder](https://www.jianshu.com/p/2253d41a8541)
