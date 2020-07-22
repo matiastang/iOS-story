@@ -49,6 +49,24 @@ override func point(inside point: CGPoint, with event: UIEvent?) -> Bool {
 
 `UIResponder` 中通过 `nextResponder` 方法来传递事件， 但要注意的是该方法默认返回都为`nil`, `iOS UIview` 系列控件中往上追溯父视图时都重写了`next`，将其设置为了该控件的父视图。
 
+可以利用`next`得到控件所在的`UIViewController`等，如下：
+```swift
+extension UIView {
+
+    // 得到View所在的控制器
+    func nextVC() ->UIViewController? {
+        var next:UIView? = self
+        repeat{
+            if let nextResponder = next?.next, nextResponder.isKind(of: UIViewController.self){
+                return (nextResponder as! UIViewController)
+            }
+            next = next?.superview
+        } while next != nil
+        return nil
+    }
+}
+```
+
 ## firstResponder
 
 ## touch
