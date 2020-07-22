@@ -2,6 +2,7 @@
 
 ## isMember、isKind、is
 
+[playground测试](https://github.com/matiastang/iOS-story/tree/master/src/Swift-isMember%E3%80%81isKind%E3%80%81is.playground)
 `isMember`和`isKind`是`NSObject` 的方法，在 `Swift` 中只有 `NSObject` 的子类可以调用。
 * `isMember` 用来判断该对象是否为指定类的对象
 * `isKind` 用来判断该对象是否为指定类或者指定类的子类的对象
