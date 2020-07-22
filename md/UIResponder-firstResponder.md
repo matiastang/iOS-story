@@ -44,7 +44,7 @@ open class UIApplication : UIResponder {
     open func sendAction(_ action: Selector, to target: Any?, from sender: Any?, for event: UIEvent?) -> Bool
 }
 ```
-添加``扩展功能如下：
+添加`UIResponder`扩展功能如下：
 ```swift
 import UIKit
 

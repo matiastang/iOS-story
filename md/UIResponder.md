@@ -1,5 +1,97 @@
 # UIResponder
 
+## 介绍
+
+`UIResponder` 是`iOS`中用于处理各种类型事件的基类，继承自底层类 `NSObject`，所有能响应事件的控件都继承自 `UIResponder`。
+![UIResponder](./img/UIResponder.png)
+
+当我们在物理控件上操作某种事件时，`UIResponder`会识别到我们的操作事件并解析成能对应的事件类型，然后找到能处理事件的响应对象对事件进行处理，事件的识别传递过程既为iOS中响应链的形，成分为两大块：
+
+### 1. 事件分发（hit-Testing）
+
+设备识别到我们的物理事件时会形成响应的事件对象`Event`, 并通过 `HitTest`工具去查找到能执行该`Event`的载体，并激活等待执行，这个过程称为事件分发过程。
+获取到`Event`后，系统`Application` 会从事件队列中按照先进先出原则取出一个事件对象，`HitTest`会首先检测该`Event` 下面的视图能否满足执行该`Event`的各种条件，如果满足就继续遍历该视图的`subviews` 直到找到最后一个满足条件的视图控件,如果最终没有找到对应控件，则会回归到自身。
+
+`UIView` 主要通过下面两个方法来确定是否包含事件及查找事件对象。
+```swift
+// 寻找合适响应的view
+override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
+    // 是否能够接收事件
+    if !self.isUserInteractionEnabled || self.isHidden || self.alpha <= 0.01 {
+        return nil
+    }
+    // 当前点在不在当前视图范围内
+    if self.point(inside: point, with: event) {
+        return nil
+    }
+    for subview in self.subviews {
+        // 坐标转换成子控件上的坐标
+        let subviewPoint = self.convert(point, to: subview)
+        // 检测子控件是否有更合适响应的
+        if let nextView = subview.hitTest(subviewPoint, with: event) {
+            return nextView
+        }
+    }
+    // 没有找到更合适的，那就返回自己
+    return self
+}
+
+// 判断点是否在调用这个方法的view上
+override func point(inside point: CGPoint, with event: UIEvent?) -> Bool {
+    // 可以自定义逻辑改变响应链
+    return true
+}
+```
+
+2. 事件传递
+
+事件产生时会一个对应的初始对象，但是这个初始对象不一定能够处理该事件，这种情况下就会将事件继续往上层父视图传递，依次向上级查找如果直到最上层窗口->application, 还是没能将该事件处理完，则该事件会被丢弃。
+
+`UIResponder` 中通过 `nextResponder` 方法来传递事件， 但要注意的是该方法默认返回都为`nil`, `iOS UIview` 系列控件中往上追溯父视图时都重写了`next`，将其设置为了该控件的父视图。
+
+## firstResponder
+
+## touch
+
+触摸事件
+
+```swift
+@available(iOS 2.0, *)
+open class UIResponder : NSObject, UIResponderStandardEditActions {
+
+    // Generally, all responders which do custom touch handling should override all four of these methods.
+    // Your responder will receive either touchesEnded:withEvent: or touchesCancelled:withEvent: for each
+    // touch it is handling (those touches it received in touchesBegan:withEvent:).
+    // *** You must handle cancelled touches to ensure correct behavior in your application.  Failure to
+    // do so is very likely to lead to incorrect behavior or crashes.
+    // 开始触摸（手指接触）
+    open func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?)
+    // 触摸移动（手指移动）
+    open func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?)
+    // 触摸结束（手指抬起）
+    open func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?)
+    // 触摸中断
+    open func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?)
+    // Apple Pencil 相关
+    @available(iOS 9.1, *)
+    open func touchesEstimatedPropertiesUpdated(_ touches: Set<UITouch>)
+}
+```
+
+`touchesEstimatedPropertiesUpdated`普通的 iphone 应用开发中不会用到这个方法，这个方法是为了 Apple Pencil 的特性设计的，主要见于 Apple Pencil 和 iPad 的联动应用中，例如用 Apple Pencil 在 iPad 上画画。
+
+主要的原因是 Apple Pencil 产生的 touch 事件的部分信息（如 Pencil 的方向等）传递到 iPad 或 iPhone 上会有一定的延时。
+
+UIKit 的回调方法 touchBegan 是立即产生的，其返回的参数 touch 中包含了 Pencil 产生的额外信息，这个额外信息是有延时的。所以，首次回调时会给出额外信息的预估值，延时获取真实值之后会调用 touchesEstimatedPropertiesUpdated 方法更新额外信息。
+
+## presses
+
+响应深按事件的方法
+
+## motion
+
+响应运动事件的方法
+
 ```swift
 import Foundation
 import UIKit
@@ -98,14 +190,15 @@ open class UIResponder : NSObject, UIResponderStandardEditActions {
     // touch it is handling (those touches it received in touchesBegan:withEvent:).
     // *** You must handle cancelled touches to ensure correct behavior in your application.  Failure to
     // do so is very likely to lead to incorrect behavior or crashes.
+    // 开始触摸（手指接触）
     open func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?)
-
+    // 触摸移动（手指移动）
     open func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?)
-
+    // 触摸结束（手指抬起）
     open func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?)
-
+    // 触摸中断
     open func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?)
-
+    // Apple Pencil 相关
     @available(iOS 9.1, *)
     open func touchesEstimatedPropertiesUpdated(_ touches: Set<UITouch>)
 
