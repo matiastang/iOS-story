@@ -424,3 +424,244 @@ void funMethod(id obj, SEL _cmd) {
 3. `消息重定向`：如果上一步没有返回值为 nil，则利用 methodSignatureForSelector:方法获取函数的参数和返回值类型。
 * 如果 methodSignatureForSelector: 返回了一个 NSMethodSignature 对象（函数签名），Runtime 系统就会创建一个 NSInvocation 对象，并通过 forwardInvocation: 消息通知当前对象，给予此次消息发送最后一次寻找 IMP 的机会。
 * 如果 methodSignatureForSelector: 返回 nil。则 Runtime 系统会发出 doesNotRecognizeSelector: 消息，程序也就崩溃了。
+
+## 动态方法交换（Method Swizzling）
+
+[Method Swizzling](https://www.jianshu.com/p/1ab7e611107c)
+
+Method Swizzling 用于改变一个已经存在的 selector 实现。我们可以在程序运行时，通过改变 selector 所在 Class（类）的 method list（方法列表）的映射从而改变方法的调用。其实质就是交换两个方法的 IMP（方法实现）。
+
+上一篇文章中我们知道：Method（方法）对应的是 objc_method 结构体；而 objc_method 结构体 中包含了 SEL method_name（方法名）、IMP method_imp（方法实现）。
+```c
+// objc_method 结构体
+typedef struct objc_method *Method;
+
+struct objc_method {
+    SEL _Nonnull method_name;                    // 方法名
+    char * _Nullable method_types;               // 方法类型
+    IMP _Nonnull method_imp;                     // 方法实现
+};
+```
+Method（方法）、SEL（方法名）、IMP（方法实现）三者的关系可以这样来表示：
+
+在运行时，Class（类） 维护了一个 method list（方法列表） 来确定消息的正确发送。method list（方法列表） 存放的元素就是 Method（方法）。而 Method（方法） 中映射了一对键值对：SEL（方法名）：IMP（方法实现）。
+
+Method swizzling 修改了 method list（方法列表），使得不同 Method（方法）中的键值对发生了交换。比如交换前两个键值对分别为 SEL A : IMP A、SEL B : IMP B，交换之后就变为了 SEL A : IMP B、SEL B : IMP A。
+
+### 使用基础
+
+```objective-c
+#import "ViewController.h"
+#import <objc/runtime.h>
+
+@interface ViewController ()
+
+@end
+
+@implementation ViewController
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    
+    [self SwizzlingMethod];
+    [self originalFunction];
+    [self swizzledFunction];
+}
+
+
+// 交换 原方法 和 替换方法 的方法实现
+- (void)SwizzlingMethod {
+    // 当前类
+    Class class = [self class];
+    
+    // 原方法名 和 替换方法名
+    SEL originalSelector = @selector(originalFunction);
+    SEL swizzledSelector = @selector(swizzledFunction);
+    
+    // 原方法结构体 和 替换方法结构体
+    Method originalMethod = class_getInstanceMethod(class, originalSelector);
+    Method swizzledMethod = class_getInstanceMethod(class, swizzledSelector);
+    
+    // 调用交换两个方法的实现
+    method_exchangeImplementations(originalMethod, swizzledMethod);
+}
+
+// 原始方法
+- (void)originalFunction {
+    NSLog(@"originalFunction");
+}
+
+// 替换方法
+- (void)swizzledFunction {
+    NSLog(@"swizzledFunction");
+}
+
+@end
+```
+```swift
+func swizzlingMethod() {
+        
+    let original = Selector("originalFunction")
+    let swizzled = Selector("swizzledFunction")
+    
+    let originalMethod = class_getInstanceMethod(object_getClass(self), original)
+    #if swift(<2.0)
+//        备注:dynamicType在Swift 3.0中已经被舍弃,我们可以使用type(of:...)来代替
+//            let swizzledMethod = class_getInstanceMethod(self.dynamicType, swizzled)
+    #else
+        let swizzledMethod = class_getInstanceMethod(type(of: self), swizzled)
+    #endif
+
+    method_exchangeImplementations(originalMethod!, swizzledMethod!)
+}
+
+@objc func originalFunction() {
+    print("\(#function)")
+}
+
+@objc func swizzledFunction() {
+    print("\(#function)")
+}
+```
+### Method Swizzling 方法一
+```c
+@implementation UIViewController (Swizzling)
+
+// 交换 原方法 和 替换方法 的方法实现
++ (void)load {
+    
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        // 当前类
+        Class class = [self class];
+        
+        // 原方法名 和 替换方法名
+        SEL originalSelector = @selector(originalFunction);
+        SEL swizzledSelector = @selector(swizzledFunction);
+        
+        // 原方法结构体 和 替换方法结构体
+        Method originalMethod = class_getInstanceMethod(class, originalSelector);
+        Method swizzledMethod = class_getInstanceMethod(class, swizzledSelector);
+        
+        /* 如果当前类没有 原方法的 IMP，说明在从父类继承过来的方法实现，
+         * 需要在当前类中添加一个 originalSelector 方法，
+         * 但是用 替换方法 swizzledMethod 去实现它 
+         */
+        BOOL didAddMethod = class_addMethod(class,
+                                            originalSelector,
+                                            method_getImplementation(swizzledMethod),
+                                            method_getTypeEncoding(swizzledMethod));
+        
+        if (didAddMethod) {
+            // 原方法的 IMP 添加成功后，修改 替换方法的 IMP 为 原始方法的 IMP
+            class_replaceMethod(class,
+                                swizzledSelector,
+                                method_getImplementation(originalMethod),
+                                method_getTypeEncoding(originalMethod));
+        } else {
+            // 添加失败（说明已包含原方法的 IMP），调用交换两个方法的实现
+            method_exchangeImplementations(originalMethod, swizzledMethod);
+        }
+    });
+}
+
+// 原始方法
+- (void)originalFunction {
+    NSLog(@"originalFunction");
+}
+
+// 替换方法
+- (void)swizzledFunction {
+    NSLog(@"swizzledFunction");
+}
+
+@end
+```
+```swift
+extension ViewController {
+    
+    func swizzlingMethodTwo() {
+        let original = Selector("originalFunctionTwo")
+        let swizzled = Selector("swizzledFunctionTwo")
+        
+        let originalMethod = class_getInstanceMethod(object_getClass(self), original)
+        let swizzledMethod = class_getInstanceMethod(type(of: self), swizzled)
+        
+        // imp添加成功表示已经不存在，添加失败表示已经存在
+        let success = class_addMethod(type(of: self), original, method_getImplementation(swizzledMethod!), method_getTypeEncoding(swizzledMethod!))
+        if success {
+            class_replaceMethod(type(of: self), swizzled, method_getImplementation(originalMethod!), method_getTypeEncoding(originalMethod!))
+        } else {
+            method_exchangeImplementations(originalMethod!, swizzledMethod!)
+        }
+    }
+    
+    @objc func swizzledFunctionTwo() {
+        print("\(#function)")
+    }
+}
+
+extension UIViewController {
+    
+    @objc func originalFunctionTwo() {
+        print("\(#function)")
+    }
+}
+```
+### Method Swizzling 方法二
+
+最大不同之处在于使用了函数指针的方式，使用函数指针最大的好处是可以有效避免命名错误。
+```c
+#import "UIViewController+PointerSwizzling.h"
+#import <objc/runtime.h>
+
+typedef IMP *IMPPointer;
+
+// 交换方法函数
+static void MethodSwizzle(id self, SEL _cmd, id arg1);
+// 原始方法函数指针
+static void (*MethodOriginal)(id self, SEL _cmd, id arg1);
+
+// 交换方法函数
+static void MethodSwizzle(id self, SEL _cmd, id arg1) {
+    
+    // 在这里添加 交换方法的相关代码
+    NSLog(@"swizzledFunc");
+    
+    MethodOriginal(self, _cmd, arg1);
+}
+
+BOOL class_swizzleMethodAndStore(Class class, SEL original, IMP replacement, IMPPointer store) {
+    IMP imp = NULL;
+    Method method = class_getInstanceMethod(class, original);
+    if (method) {
+        const char *type = method_getTypeEncoding(method);
+        imp = class_replaceMethod(class, original, replacement, type);
+        if (!imp) {
+            imp = method_getImplementation(method);
+        }
+    }
+    if (imp && store) { *store = imp; }
+    return (imp != NULL);
+}
+
+@implementation UIViewController (PointerSwizzling)
+
++ (void)load {
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        [self swizzle:@selector(originalFunc) with:(IMP)MethodSwizzle store:(IMP *)&MethodOriginal];
+    });
+}
+
++ (BOOL)swizzle:(SEL)original with:(IMP)replacement store:(IMPPointer)store {
+    return class_swizzleMethodAndStore(self, original, replacement, store);
+}
+
+// 原始方法
+- (void)originalFunc {
+    NSLog(@"originalFunc");
+}
+
+@end
+```
