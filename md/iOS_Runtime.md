@@ -665,3 +665,7 @@ BOOL class_swizzleMethodAndStore(Class class, SEL original, IMP replacement, IMP
 
 @end
 ```
+
+## 获取类详细属性、方法
+
+[获取类详细属性、方法](https://www.jianshu.com/p/aeecc4b4621c)
