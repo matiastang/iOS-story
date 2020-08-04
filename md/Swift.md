@@ -1,5 +1,18 @@
 # Swift
 
+## @_silgen_name
+
+[@_silgen_name](https://stackoverflow.com/questions/35030998/what-is-silgen-name-in-swift-language)
+
+```swift
+@_silgen_name("ytcpsocket_connect") private func c_ytcpsocket_connect(_ host:UnsafePointer<Byte>,port:Int32,timeout:Int32) -> Int32
+```
+如上：使用`@_silgen_name`属性将`c`中的`ytcpsocket_connect`函数重命名为`c_ytcpsocket_connect`，在后续的使用中可以直接使用`c_ytcpsocket_connect`函数。
+`@_silgen_name`属性**仅供编译器内部**使用，并且实际上并不等效于C的asm属性，因为它不会将调用约定更改为与C兼容。一般在将Swift移植到其他平台时会用到。
+
+## Mirror
+[深度探究HandyJSON(二) Mirror 的原理](https://www.jianshu.com/p/da0ccff0b531)
+
 ## isMember、isKind、is
 
 [playground测试](https://github.com/matiastang/iOS-story/tree/master/src/Swift-isMember%E3%80%81isKind%E3%80%81is.playground)
